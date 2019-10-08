@@ -1,0 +1,5 @@
+#Python serial library documentation
+https://pyserial.readthedocs.io/en/latest/pyserial_api.html#serial.Serial.__init__
+
+#Wiringpi documentation
+http://wiringpi.comss
