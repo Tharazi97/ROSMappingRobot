@@ -205,3 +205,7 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(mapper src/mapper.cpp)
+target_link_libraries(mapper ${catkin_LIBRARIES})
+add_dependencies(mapper mapping_robot_generate_messages_cpp)
