@@ -30,16 +30,16 @@ class SubPub:
         rospy.sleep(1)
 
     def lidar_read(self):
-        	sum = 0
-	for i in range(10):
-	        lid.write(bytearray([90, 4, 4, 98]))
-        	# Store read data in list format to have easer acces to separate bytes
-		serial_data = list(lid.read(9))
-		# Check frame start
-        	if serial_data[0] == 'Y' and serial_data[1] == 'Y':
-			# Third byte is distance L_byte and fourth byte is distance H_byte, so it needs to by shifted by 8
-			sum += ord(serial_data[2]) + (ord(serial_data[3]) << 8)
-	return (sum/10)
+        sum_ranges = 0
+        for i in range(10):
+            lid.write(bytearray([90, 4, 4, 98]))
+            # Store read data in list format to have easer acces to separate bytes
+            serial_data = list(lid.read(9))
+            # Check frame start
+            if serial_data[0] == 'Y' and serial_data[1] == 'Y':
+                # Third byte is distance L_byte and fourth byte is distance H_byte, so it needs to by shifted by 8
+                sum_ranges += ord(serial_data[2]) + (ord(serial_data[3]) << 8)
+        return (sum_ranges/10)
 
     # In the callback function we invoke all peripherals wrapper functions
     def callback(self, msg):
