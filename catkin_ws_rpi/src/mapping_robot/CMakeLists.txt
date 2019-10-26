@@ -12,6 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
+  geometry_msgs
+  tf
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -209,3 +212,10 @@ include_directories(
 add_executable(mapper src/mapper.cpp)
 target_link_libraries(mapper ${catkin_LIBRARIES})
 add_dependencies(mapper mapping_robot_generate_messages_cpp)
+
+add_executable(tf_publisher src/tf_publisher.cpp)
+target_link_libraries(tf_publisher ${catkin_LIBRARIES})
+
+add_executable(odom_publisher src/odom_publisher.cpp)
+target_link_libraries(odom_publisher ${catkin_LIBRARIES})
+
