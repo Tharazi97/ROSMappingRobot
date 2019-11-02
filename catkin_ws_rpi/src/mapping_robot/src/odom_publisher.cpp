@@ -3,12 +3,14 @@
 #include <nav_msgs/Odometry.h>
 #include "mapping_robot/GetTicksL.h"
 #include "mapping_robot/GetTicksR.h"
+#include "mapping_robot/Speeds.h"
 
 int main(int argc, char** argv){
   ros::init(argc, argv, "odometry_publisher");
 
   ros::NodeHandle n;
   ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
+  ros::Publisher speed_pub = n.advertise<mapping_robot::Speeds>("speeds", 10);
   tf::TransformBroadcaster odom_broadcaster;
 
   ros::ServiceClient clientLeft = n.serviceClient<mapping_robot::GetTicksL>("GetTicksL");
@@ -39,7 +41,7 @@ int main(int argc, char** argv){
   current_time = ros::Time::now();
   last_time = ros::Time::now();
 
-  ros::Rate r(10.0);
+  ros::Rate r(2.0);
   while(n.ok()){
 
     ros::spinOnce();               // check for incoming messages
@@ -95,7 +97,12 @@ int main(int argc, char** argv){
     }
 
     dFiR = deltaTicksR * 0.157/dt;
-    ROS_INFO("%d", deltaTicksL);
+    
+    mapping_robot::Speeds speeds;
+    speeds.left = dFiL;
+    speeds.right = dFiR;
+    speed_pub.publish(speeds);
+    
 
     vp = wheelR*(dFiR + dFiL)/2;
     dtheta = wheelR*(dFiR - dFiL)/shaft;

@@ -2,7 +2,7 @@
 
 import rospy
 import RPi.GPIO as GPIO
-from mapping_robot.srv import GetTicksL, GetTicksR
+from mapping_robot.srv import GetTicksL, GetTicksR, ChangeDir
  
 GPIO.setmode(GPIO.BCM)
 
@@ -55,11 +55,20 @@ def handle_GetTicksR(req):
     global ticksR
     return ticksR
     
+def handle_ChangeDirL(req):
+    global directionL
+    directionL = req.data
+
+def handle_ChangeDirR(req):
+    global directionR
+    directionR = req.data
 
 if __name__ == '__main__':
     rospy.init_node('RPM', anonymous=False)
     lastReadLeft = rospy.Time.now()
     lastReadRight = rospy.Time.now()
-    s1 = rospy.Service('GetTicksL', GetTicksL, handle_GetTicksL)
-    s2 = rospy.Service('GetTicksR', GetTicksR, handle_GetTicksR)
+    sTicksL = rospy.Service('GetTicksL', GetTicksL, handle_GetTicksL)
+    sTicksR = rospy.Service('GetTicksR', GetTicksR, handle_GetTicksR)
+    sDirL = rospy.Service('ChangeDirL', ChangeDir, handle_ChangeDirL)
+    sDirR = rospy.Service('ChangeDirR', ChangeDir, handle_ChangeDirR)
     rospy.spin()
