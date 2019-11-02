@@ -59,8 +59,8 @@ add_message_files(
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
-  GetLastReadingLeft.srv
-  GetLastReadingRight.srv
+  GetTicksL.srv
+  GetTicksR.srv
 )
 
 ## Generate actions in the 'action' folder

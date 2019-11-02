@@ -1,8 +1,8 @@
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
-#include "mapping_robot/GetLastReadingLeft.h"
-#include "mapping_robot/GetLastReadingRight.h"
+#include "mapping_robot/GetTicksL.h"
+#include "mapping_robot/GetTicksR.h"
 
 int main(int argc, char** argv){
   ros::init(argc, argv, "odometry_publisher");
@@ -11,8 +11,8 @@ int main(int argc, char** argv){
   ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 50);
   tf::TransformBroadcaster odom_broadcaster;
 
-  ros::ServiceClient clientLeft = n.serviceClient<mapping_robot::GetLastReadingLeft>("get_last_reading_left");
-  ros::ServiceClient clientRight = n.serviceClient<mapping_robot::GetLastReadingRight>("get_last_reading_right");
+  ros::ServiceClient clientLeft = n.serviceClient<mapping_robot::GetTicksL>("GetTicksL");
+  ros::ServiceClient clientRight = n.serviceClient<mapping_robot::GetTicksR>("GetTicksR");
 
   double xP = 0.0;
   double yP = 0.0;
@@ -30,6 +30,11 @@ int main(int argc, char** argv){
   double wheelR = 0.065;
   double shaft = 0.202;
 
+  int currTicksL = 0, lastTicksL = 0;
+  int currTicksR = 0, lastTicksR = 0;
+
+  int deltaTicksL = 0, deltaTicksR = 0;
+
   ros::Time current_time, last_time;
   current_time = ros::Time::now();
   last_time = ros::Time::now();
@@ -39,42 +44,58 @@ int main(int argc, char** argv){
 
     ros::spinOnce();               // check for incoming messages
     current_time = ros::Time::now();
+    double dt = (current_time - last_time).toSec();
 
-    mapping_robot::GetLastReadingLeft srvLeft;
+    mapping_robot::GetTicksL srvLeft;
     if (clientLeft.call(srvLeft))
     {
-      ROS_INFO("%lf", srvLeft.response.data.toSec());
-      if(srvLeft.response.data.toSec() != 0)
-      {
-        dFiL = 0.314/srvLeft.response.data.toSec();
-      }
-      else
-      {
-        dFiL = 0;
-      }
+      currTicksL = srvLeft.response.data;
     }
     else
     {
       ROS_INFO("fail");
     }
-    
 
-    mapping_robot::GetLastReadingRight srvRight;
+    if (lastTicksL > 32700 && currTicksL < -32700)
+    {
+      deltaTicksL = 65536 + currTicksL - lastTicksL;
+    }
+    else if (currTicksL > 32700 && lastTicksL < -32700)
+    {
+      deltaTicksL = currTicksL - lastTicksL - 65536;
+    }
+    else
+    {
+      deltaTicksL = currTicksL - lastTicksL;
+    }
+
+    dFiL = deltaTicksL * 0.157/dt;
+
+    mapping_robot::GetTicksR srvRight;
     if (clientRight.call(srvRight))
     {
-      if(srvRight.response.data.toSec() != 0)
-      {
-        dFiR = 0.314/srvRight.response.data.toSec();
-      }
-      else
-      {
-        dFiR = 0;
-      }
+      currTicksR = srvRight.response.data;
     }
     else
     {
       ROS_INFO("fail");
     }
+
+    if (lastTicksL > 32700 && currTicksL < -32700)
+    {
+      deltaTicksL = 65536 + currTicksL - lastTicksL;
+    }
+    else if (currTicksL > 32700 && lastTicksL < -32700)
+    {
+      deltaTicksL = currTicksL - lastTicksL - 65536;
+    }
+    else
+    {
+      deltaTicksL = currTicksL - lastTicksL;
+    }
+
+    dFiR = deltaTicksR * 0.157/dt;
+    ROS_INFO("%d", deltaTicksL);
 
     vp = wheelR*(dFiR + dFiL)/2;
     dtheta = wheelR*(dFiR - dFiL)/shaft;
@@ -83,7 +104,6 @@ int main(int argc, char** argv){
     dyP = sin(theta) * vp;
 
     //compute odometry in a typical way given the velocities of the robot
-    double dt = (current_time - last_time).toSec();
     double delta_x = dxP * dt;
     double delta_y = dxP * dt;
     double delta_th = dtheta * dt;
@@ -130,6 +150,8 @@ int main(int argc, char** argv){
     odom_pub.publish(odom);
 
     last_time = current_time;
+    lastTicksL = currTicksL;
+    lastTicksR = currTicksR;
     r.sleep();
   }
 }
