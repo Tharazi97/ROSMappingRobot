@@ -1,12 +1,12 @@
 #include "ros/ros.h"
 #include "std_msgs/UInt8.h"
 #include "geometry_msgs/Twist.h"
-#include <nav_msgs/Odometry.h>
 #include "mapping_robot/Speeds.h"
 #include "mapping_robot/ChangeDir.h"
+#include "mapping_robot/MotorPowers.h"
 
-#define motor_max 255
-#define motor_min (-255)
+#define motor_max 400
+#define motor_min (-400)
 
 // We are using this subscriber publiher class to ease using publish and subscribe at the same time
 class SubPub {
@@ -22,8 +22,7 @@ class SubPub {
 	}
 	
 	ros::NodeHandle n;
-	ros::Publisher pubL;
-    ros::Publisher pubR;
+	ros::Publisher pub;
 	ros::Subscriber subWanted;
     ros::Subscriber subSpeeds;
     ros::ServiceClient clientLeft;
@@ -35,8 +34,7 @@ class SubPub {
     double shaft = 0.202;
 	
 	SubPub() {
-		pubL = n.advertise<std_msgs::UInt8>("left_wheel", 10);
-        pubR = n.advertise<std_msgs::UInt8>("right_wheel", 10);
+		pub = n.advertise<mapping_robot::MotorPowers>("motor_powers", 10);
 
 		subWanted = n.subscribe("cmd_vel", 10, &SubPub::callbackWanted, this);
         subSpeeds = n.subscribe("speeds", 10, &SubPub::callbackSpeeds, this);
@@ -62,11 +60,7 @@ class PIDWheel {
         lastTime = ros::Time::now();
     }
 
-    int doPID(double wanted, double current) {
-        if (wanted == 0) {
-            return 0;
-        }
-
+    int16_t doPID(double wanted, double current) {
         currentTime = ros::Time::now();
         double dt = (currentTime - lastTime).toSec();
         lastTime = currentTime;
@@ -78,16 +72,21 @@ class PIDWheel {
         
         lastErr = err;
 
-        int motor = (kp * err) + (ki * integral) + (kd * derivative);
+        // might worse the breaking process
+        if (wanted == 0) {
+            return 0;
+        }
+
+        int16_t motor = (kp * err) + (ki * integral) + (kd * derivative);
 
         if (motor > motor_max) {
             motor = motor_max;
             integral -= err * dt;
-        }
-        else if (motor < motor_min) {
+        } else if (motor < motor_min) {
             motor = motor_min;
             integral -= err * dt;
         }
+        return motor;
     }
 
 };
@@ -106,17 +105,15 @@ int main(int argc, char **argv)
     while(subPub.n.ok()) {
         ros::spinOnce();
         
-        uint8_t leftOut = leftWheel.doPID(subPub.wantedDFiL, subPub.currentDFiL);
-        uint8_t rightOut = rightWheel.doPID(subPub.wantedDFiR, subPub.currentDFiR);
+        int16_t leftOut = leftWheel.doPID(subPub.wantedDFiL, subPub.currentDFiL);
+        int16_t rightOut = rightWheel.doPID(subPub.wantedDFiR, subPub.currentDFiR);
         
-        std_msgs::UInt8 leftMsg;
-        std_msgs::UInt8 rightMsg;
+        mapping_robot::MotorPowers powers;
 
-        leftMsg.data = leftOut;
-        leftMsg.data = rightOut;
+        powers.left = leftOut;
+        powers.right = rightOut;
 
-        subPub.pubL.publish(leftMsg);
-        subPub.pubR.publish(rightMsg);
+        subPub.pub.publish(powers);
 
         if(lastLeftOut < 0 && leftOut > 0) {
             mapping_robot::ChangeDir srvLeft;

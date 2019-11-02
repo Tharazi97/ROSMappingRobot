@@ -58,10 +58,12 @@ def handle_GetTicksR(req):
 def handle_ChangeDirL(req):
     global directionL
     directionL = req.data
+    return True
 
 def handle_ChangeDirR(req):
     global directionR
     directionR = req.data
+    return True
 
 if __name__ == '__main__':
     rospy.init_node('RPM', anonymous=False)
