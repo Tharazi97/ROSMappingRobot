@@ -1,0 +1,7 @@
+<launch>
+	
+	<param name="/amcl/transform_tolerance" value="15.0" />
+	<param name="/move_base/global_costmap/transform_tolerance" value="15.0" />
+	<param name="/move_base/local_costmap/transform_tolerance" value="15.0" />
+
+</launch>
