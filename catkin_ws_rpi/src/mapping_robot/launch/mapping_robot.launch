@@ -1,6 +1,16 @@
 <launch>    
     <node name="encoders" pkg="mapping_robot" type="encoders.py" />
 
+    <node name="lidar_scanner" pkg="mapping_robot" type="lidar_scanner.py" />
+
+    <node name="odometry" pkg="mapping_robot" type="odom_publisher" />
+
+    <node name="transform" pkg="mapping_robot" type="tf_publisher" />
+
+    <node name="PID_motors" pkg="mapping_robot" type="PID_drive" />
+
+    <node name="motors" pkg="mapping_robot" type="motors.py" />
+
     <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
         <param name="map_update_interval" value="30.0"/>
         <param name="maxUrange" value="10.0"/>
@@ -35,12 +45,6 @@
         <param name="lasamplerange" value="0.005"/>
         <param name="lasamplestep" value="0.005"/>
     </node>
-
-    <node name="lidar_scanner" pkg="mapping_robot" type="lidar_scanner.py" />
-
-    <node name="odometry" pkg="mapping_robot" type="odom_publisher" />
-
-    <node name="transform" pkg="mapping_robot" type="tf_publisher" />
 
     <node name="rviz" pkg="rviz" type="rviz" />
 </launch>
