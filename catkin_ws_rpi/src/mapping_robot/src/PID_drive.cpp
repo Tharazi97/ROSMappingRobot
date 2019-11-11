@@ -5,8 +5,8 @@
 #include "mapping_robot/ChangeDir.h"
 #include "mapping_robot/MotorPowers.h"
 
-#define motor_max 400
-#define motor_min (-400)
+#define motor_max 1000
+#define motor_min (-1000)
 
 // We are using this subscriber publiher class to ease using publish and subscribe at the same time
 class SubPub {
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
     uint8_t lastLeftOut = 0, lastRightOut = 0;
 
-    ros::Rate r(10.0);
+    ros::Rate r(100.0);
     while(subPub.n.ok()) {
         ros::spinOnce();
         
