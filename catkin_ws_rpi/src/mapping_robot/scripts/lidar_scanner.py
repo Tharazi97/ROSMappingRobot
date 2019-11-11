@@ -8,7 +8,7 @@ from sensor_msgs.msg import LaserScan
 wiringpi.wiringPiSetupGpio()
 
 horizontalServo = 12
-verticalServo = 18
+verticalServo = 13
 
 # Set GPIO18 as vertical servo and GPIO12 as horizontal servo
 wiringpi.pinMode(horizontalServo, wiringpi.GPIO.PWM_OUTPUT)
@@ -41,8 +41,8 @@ if __name__ == '__main__':
 
     while not rospy.is_shutdown():
 
-        wiringpi.pwmWrite(horizontalServo, 108)
-        wiringpi.pwmWrite(verticalServo, 108)
+        wiringpi.pwmWrite(horizontalServo, 108) # 0 for horizontal servo
+        wiringpi.pwmWrite(verticalServo, 108) # 0 for vertical servo
         rospy.sleep(0.3)
         # Create laser scan msg with parameters provided below
         scan = LaserScan()
@@ -76,8 +76,8 @@ if __name__ == '__main__':
             # Move to the servo to the next point
             wiringpi.pwmWrite(horizontalServo, 108+(i*186/180))
 
-        wiringpi.pwmWrite(horizontalServo, 108)
-        wiringpi.pwmWrite(verticalServo, 480)
+        wiringpi.pwmWrite(horizontalServo, 108) # 0 for horizontal servo
+        wiringpi.pwmWrite(verticalServo, 470) # 180 for vertical servo
         rospy.sleep(0.3)
 
         for i in range(num_readings):
