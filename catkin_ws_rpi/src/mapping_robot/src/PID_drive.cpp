@@ -5,8 +5,8 @@
 #include "mapping_robot/ChangeDir.h"
 #include "mapping_robot/MotorPowers.h"
 
-#define motor_max 1000
-#define motor_min (-1000)
+#define motor_max 100
+#define motor_min (-100)
 
 // We are using this subscriber publiher class to ease using publish and subscribe at the same time
 class SubPub {
@@ -96,8 +96,8 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "PID_drive");
 	SubPub subPub;
 
-    PIDWheel leftWheel(10, 10, 0.001); //need to be calibrated
-    PIDWheel rightWheel(10, 10, 0.001);
+    PIDWheel leftWheel(2, 10, 0.001); //need to be calibrated
+    PIDWheel rightWheel(2, 10, 0.001);
 
     uint8_t lastLeftOut = 0, lastRightOut = 0;
 
@@ -115,13 +115,13 @@ int main(int argc, char **argv)
 
         subPub.pub.publish(powers);
 
-        if(lastLeftOut < 0 && leftOut > 0) {
+        if(lastLeftOut <= 0 && leftOut > 0) {
             mapping_robot::ChangeDir srvLeft;
             srvLeft.request.data = true;
             if (!subPub.clientLeft.call(srvLeft)) {
                 ROS_INFO("fail");
             }
-        } else if (lastLeftOut > 0 && leftOut < 0) {
+        } else if (lastLeftOut >= 0 && leftOut < 0) {
             mapping_robot::ChangeDir srvLeft;
             srvLeft.request.data = false;
             if (!subPub.clientLeft.call(srvLeft)) {
@@ -129,13 +129,13 @@ int main(int argc, char **argv)
             }
         }
 
-        if(lastRightOut < 0 && rightOut > 0) {
+        if(lastRightOut <= 0 && rightOut > 0) {
             mapping_robot::ChangeDir srvRight;
             srvRight.request.data = true;
             if (!subPub.clientRight.call(srvRight)) {
                 ROS_INFO("fail");
             }
-        } else if (lastRightOut > 0 && rightOut < 0) {
+        } else if (lastRightOut >= 0 && rightOut < 0) {
             mapping_robot::ChangeDir srvRight;
             srvRight.request.data = false;
             if (!subPub.clientRight.call(srvRight)) {

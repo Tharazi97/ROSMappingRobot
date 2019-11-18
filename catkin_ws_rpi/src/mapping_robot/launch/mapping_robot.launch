@@ -1,9 +1,9 @@
 <launch>    
-    <node name="encoders" pkg="mapping_robot" type="encoders.py" />
+    <node name="encoders" pkg="mapping_robot" type="encoders_timing.py" />
 
     <node name="lidar_scanner" pkg="mapping_robot" type="lidar_scanner.py" />
 
-    <node name="odometry" pkg="mapping_robot" type="odom_publisher" />
+    <node name="odometry" pkg="mapping_robot" type="odom_publisher_timing" />
 
     <node name="transform" pkg="mapping_robot" type="tf_publisher" />
 
@@ -46,5 +46,5 @@
         <param name="lasamplestep" value="0.005"/>
     </node>
 
-    <node name="rviz" pkg="rviz" type="rviz" />
+    <!-- <node name="rviz" pkg="rviz" type="rviz" /> -->
 </launch>

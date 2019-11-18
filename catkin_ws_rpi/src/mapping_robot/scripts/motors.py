@@ -5,15 +5,15 @@ from mapping_robot.msg import MotorPowers
 
 GPIO.setmode(GPIO.BCM)
 
-leftMotorPWM = 22
-leftMotorIn1 = 5
-leftMotorIn2 = 6
+leftMotorPWM = 23
+leftMotorIn1 = 16
+leftMotorIn2 = 20
 
-rightMotorPWM = 23
-rightMotorIn1 = 16
-rightMotorIn2 = 20
+rightMotorPWM = 22
+rightMotorIn1 = 5
+rightMotorIn2 = 6
 
-# Set GPIO13 as left motor pwm and GPIO19 as right motor
+# Set GPIO23 as left motor pwm and GPIO22 as right motor
 GPIO.setup(leftMotorPWM, GPIO.OUT)
 GPIO.setup(rightMotorPWM, GPIO.OUT)
 
@@ -37,12 +37,12 @@ def callback(data):
         ## set pin 1 high, 2 low	
         GPIO.output(leftMotorIn1, GPIO.HIGH)
         GPIO.output(leftMotorIn2, GPIO.LOW)
-        lPWM.ChangeDutyCycle(data.left/(-10))
+        lPWM.ChangeDutyCycle(data.left*(-1))
     elif data.left > 0:
         ## set pin 1 low, 2 high
         GPIO.output(leftMotorIn1, GPIO.LOW)
         GPIO.output(leftMotorIn2, GPIO.HIGH)
-        lPWM.ChangeDutyCycle(data.left/(10))
+        lPWM.ChangeDutyCycle(data.left)
     else:
         ## set both high to brake?
         GPIO.output(leftMotorIn1, GPIO.HIGH)
@@ -53,12 +53,12 @@ def callback(data):
         ## set pin 1 high, 2 low
         GPIO.output(rightMotorIn1, GPIO.HIGH)
         GPIO.output(rightMotorIn2, GPIO.LOW)
-        rPWM.ChangeDutyCycle(data.left/(-10))
+        rPWM.ChangeDutyCycle(data.left*(-1))
     elif data.right > 0:
         ## set pin 1 low, 2 high
         GPIO.output(rightMotorIn1, GPIO.LOW)
         GPIO.output(rightMotorIn2, GPIO.HIGH)
-        rPWM.ChangeDutyCycle(data.left/(10))
+        rPWM.ChangeDutyCycle(data.left)
     else:
         ## set both high to brake?
         GPIO.output(rightMotorIn1, GPIO.HIGH)
@@ -73,3 +73,6 @@ if __name__ == '__main__':
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
+    lPWM.stop()
+    rPWM.stop()
+    GPIO.cleanup()

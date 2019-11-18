@@ -56,6 +56,8 @@ if __name__ == '__main__':
         scan.range_max = 12.0
 
         for i in range(num_readings):
+	    if rospy.is_shutdown():
+		break
             lid.write(bytearray([90, 4, 4, 98]))
             # Store read data in list format to have easer acces to separate bytes
             serial_data = list(lid.read(9))
@@ -81,6 +83,8 @@ if __name__ == '__main__':
         rospy.sleep(0.3)
 
         for i in range(num_readings):
+	    if rospy.is_shutdown():
+		break
             lid.write(bytearray([90, 4, 4, 98]))
             # Store read data in list format to have easer acces to separate bytes
             serial_data = list(lid.read(9))

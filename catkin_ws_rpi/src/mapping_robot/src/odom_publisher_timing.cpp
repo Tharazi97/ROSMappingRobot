@@ -37,48 +37,62 @@ int main(int argc, char** argv){
   last_time = ros::Time::now();
 
   ros::Rate r(10.0);
-  while(n.ok()){
+  while(n.ok()) {
 
     ros::spinOnce();               // check for incoming messages
     current_time = ros::Time::now();
     double dt = (current_time - last_time).toSec();
 
     mapping_robot::GetEncoder srvLeft;
-    if (clientLeft.call(srvLeft))
-    {
-      double difference = srvLeft.response.data.timeStamp - current_time.toSec();
+    if (clientLeft.call(srvLeft)) {
+      double difference = current_time.toSec() - srvLeft.response.data.timeStamp;
       if (difference <= dt) {
-        dFiL = (3.14/20)/srvLeft.response.data.delta;
+        if (srvLeft.response.data.delta != 0) {
+          dFiL = (3.14/20)/srvLeft.response.data.delta;
+        }
       } else if (difference <= 2*dt) {
-        dFiL = (3.14/20)/dt;
+        if (dFiL > 0) {
+          dFiL = (3.14/20)/dt;
+        } else {
+          dFiL = (-3.14/20)/dt;
+        }
       } else if (difference <= 3*dt) {
-        dFiL = (3.14/20)/(2*dt);
+        if (dFiL > 0) {
+          dFiL = (3.14/20)/(2*dt);
+        } else {
+          dFiL = (-3.14/20)/(2*dt);
+        }
       } else {
         dFiL = 0;
       }
-    }
-    else
-    {
+    } else {
       ROS_INFO("fail");
       dFiL = 0;
     }
 
     mapping_robot::GetEncoder srvRight;
-    if (clientRight.call(srvRight))
-    {
-      double difference = srvRight.response.data.timeStamp - current_time.toSec();
+    if (clientRight.call(srvRight)) {
+      double difference = current_time.toSec() - srvRight.response.data.timeStamp;
       if (difference <= dt) {
-        dFiR = (3.14/20)/srvRight.response.data.delta;
+        if (srvLeft.response.data.delta != 0) {
+          dFiR = (3.14/20)/srvRight.response.data.delta;
+        }
       } else if (difference <= 2*dt) {
-        dFiR = (3.14/20)/dt;
+        if (dFiR > 0) {
+          dFiR = (3.14/20)/dt;
+        } else {
+          dFiR = (-3.14/20)/dt;
+        }
       } else if (difference <= 3*dt) {
-        dFiR = (3.14/20)/(2*dt);
+        if (dFiR > 0) {
+          dFiR = (3.14/20)/(2*dt);
+        } else {
+          dFiR = (-3.14/20)/(2*dt);
+        }
       } else {
         dFiR = 0;
       }
-    }
-    else
-    {
+    } else {
       ROS_INFO("fail");
       dFiR = 0;
     }

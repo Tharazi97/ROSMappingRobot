@@ -4,11 +4,13 @@ import rospy
 import RPi.GPIO as GPIO
 from mapping_robot.srv import GetEncoder, ChangeDir
 from mapping_robot.msg import Encoder
+
+rospy.init_node('RPM', anonymous=False)
  
 GPIO.setmode(GPIO.BCM)
 
-left_wheel = 23
-right_wheel = 24
+left_wheel = 27
+right_wheel = 26
 
 GPIO.setup(left_wheel, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(right_wheel, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
@@ -88,7 +90,7 @@ def handle_ChangeDirR(req):
     return True
 
 if __name__ == '__main__':
-    rospy.init_node('RPM', anonymous=False)
+    rospy.sleep(1.0)
     lastTimeL = rospy.Time.now().to_sec()
     lastTimeR = rospy.Time.now().to_sec()
     sEncoderL = rospy.Service('GetEncoderL', GetEncoder, handle_GetEncoderL)
