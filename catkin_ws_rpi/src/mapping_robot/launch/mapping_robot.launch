@@ -1,7 +1,7 @@
 <launch>    
     <node name="encoders" pkg="mapping_robot" type="encoders_timing.py" />
 
-    <node name="lidar_scanner" pkg="mapping_robot" type="lidar_scanner.py" />
+    <node name="lidar_scanner" pkg="mapping_robot" type="lidar_scanner2.py" />
 
     <node name="odometry" pkg="mapping_robot" type="odom_publisher_timing" />
 
@@ -22,7 +22,7 @@
         <param name="iterations" value="5"/>
         <param name="lsigma" value="0.075"/>
         <param name="ogain" value="3.0"/>
-        <param name="lskip" value="2"/>
+        <param name="lskip" value="0"/>
         <param name="minimumScore" value="200"/>
         <param name="srr" value="0.01"/>
         <param name="srt" value="0.02"/>
