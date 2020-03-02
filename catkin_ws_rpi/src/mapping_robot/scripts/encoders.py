@@ -2,58 +2,82 @@
 
 import rospy
 import RPi.GPIO as GPIO
-from mapping_robot.srv import GetTicksL, GetTicksR, ChangeDir
+from mapping_robot.srv import GetEncoder, ChangeDir
+from mapping_robot.msg import Encoder
+
+rospy.init_node('RPM', anonymous=False)
  
 GPIO.setmode(GPIO.BCM)
 
-left_wheel = 23
-right_wheel = 24
+left_wheel = 27
+right_wheel = 26
 
 GPIO.setup(left_wheel, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(right_wheel, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-ticksL = 0
-ticksR = 0
-
 directionL = True
 directionR = True
 
-def left_wheel_int(channel):  
-    global ticksL
-    if directionL:
-        ticksL += 1
-    else:
-        ticksL -= 1
+counterL = 0
+counterR = 0
 
-    if ticksL > 32767:
-        ticksL = -32768
-    elif ticksL < -32768:
-        ticksL = 32767
-    
+lastTimeL = 0
+lastTimeR = 0
+
+averageL = 0
+averageR = 0
+
+def left_wheel_int(channel):
+    global lastTimeL
+    global averageL
+    global counterL
+    currTimeL = rospy.Time.now().to_sec()
+    deltaL = currTimeL - lastTimeL
+    if directionL:
+        averageL = ( ( averageL * counterL ) / ( counterL + 1 ) ) + ( deltaL / ( counterL + 1 ) )
+    else:
+        averageL = ( ( averageL * counterL ) / ( counterL + 1 ) ) - ( deltaL / ( counterL + 1 ) )
+    counterL += 1
+    lastTimeL = currTimeL    
   
 def right_wheel_int(channel):  
-    global ticksR
+    global lastTimeR
+    global averageR
+    global counterR
+    currTimeR = rospy.Time.now().to_sec()
+    deltaR = currTimeR - lastTimeR
     if directionR:
-        ticksR += 1
+        averageR = ( ( averageR * counterR ) / ( counterR + 1 ) ) + ( deltaR / ( counterR + 1 ) )
     else:
-        ticksR -= 1
-
-    if ticksR > 32767:
-        ticksR = -32768
-    elif ticksR < -32768:
-        ticksR = 32767
+        averageR = ( ( averageR * counterR ) / ( counterR + 1 ) ) - ( deltaR / ( counterR + 1 ) )
+    counterR += 1
+    lastTimeR = currTimeR  
 
 
 GPIO.add_event_detect(left_wheel, GPIO.BOTH, callback=left_wheel_int, bouncetime=5)
 GPIO.add_event_detect(right_wheel, GPIO.BOTH, callback=right_wheel_int, bouncetime=5)
 
-def handle_GetTicksL(req):
-    global ticksL
-    return ticksL
+def handle_GetEncoderL(req):
+    global averageL
+    global lastTimeL
+    global counterL
+    enco = Encoder()
+    enco.delta = averageL
+    enco.timeStamp = lastTimeL
+    averageL = 0.0
+    counterL = 0.0
+    return enco
 
-def handle_GetTicksR(req):
-    global ticksR
-    return ticksR
+def handle_GetEncoderR(req):
+    global averageR
+    global lastTimeR
+    global counterR
+    enco = Encoder()
+    enco.delta = averageR
+    enco.timeStamp = lastTimeR
+    averageR = 0.0
+    counterR = 0.0
+    return enco
     
 def handle_ChangeDirL(req):
     global directionL
@@ -66,11 +90,11 @@ def handle_ChangeDirR(req):
     return True
 
 if __name__ == '__main__':
-    rospy.init_node('RPM', anonymous=False)
-    lastReadLeft = rospy.Time.now()
-    lastReadRight = rospy.Time.now()
-    sTicksL = rospy.Service('GetTicksL', GetTicksL, handle_GetTicksL)
-    sTicksR = rospy.Service('GetTicksR', GetTicksR, handle_GetTicksR)
+    rospy.sleep(1.0)
+    lastTimeL = rospy.Time.now().to_sec()
+    lastTimeR = rospy.Time.now().to_sec()
+    sEncoderL = rospy.Service('GetEncoderL', GetEncoder, handle_GetEncoderL)
+    sEncoderR = rospy.Service('GetEncoderR', GetEncoder, handle_GetEncoderR)
     sDirL = rospy.Service('ChangeDirL', ChangeDir, handle_ChangeDirL)
     sDirR = rospy.Service('ChangeDirR', ChangeDir, handle_ChangeDirR)
     rospy.spin()
