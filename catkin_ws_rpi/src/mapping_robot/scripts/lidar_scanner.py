@@ -4,6 +4,7 @@ import rospy
 import wiringpi
 import serial
 from sensor_msgs.msg import LaserScan
+from std_msgs.msg import Bool
 
 wiringpi.wiringPiSetupGpio()
 
@@ -23,91 +24,101 @@ wiringpi.pwmSetRange(4000)
 
 lid = serial.Serial(port = "/dev/ttyAMA0", baudrate = 115200, bytesize = serial.EIGHTBITS, parity = serial.PARITY_NONE, stopbits = serial.STOPBITS_ONE, timeout = 2)
 
+isMoving = False
+
+def callbackMove(msg):
+    global isMoving
+    isMoving = True
 
 if __name__ == '__main__':
     rospy.init_node('laser_scan_publisher', anonymous=False)
 
     # Inform master that we will be publishing LaserScan msgs on the scan toppic.
     scan_pub = rospy.Publisher("scan", LaserScan, queue_size=100)
-    
+    rospy.Subscriber("is_moving", Bool, callbackMove)
+
     # Number of laser reading per half cycle
     num_readings = 360
     
     # Rate of 1 full path of lidar 
-    rate = rospy.Rate(0.15) # 0.15hz
+    rate = rospy.Rate(0.3) # 0.15hz
 
     # Way the lidar is spinning
     clockwise = False
 
     while not rospy.is_shutdown():
 
-        wiringpi.pwmWrite(horizontalServo, 108) # 0 for horizontal servo
-        wiringpi.pwmWrite(verticalServo, 108) # 0 for vertical servo
-        rospy.sleep(0.3)
         # Create laser scan msg with parameters provided below
         scan = LaserScan()
         scan.header.stamp = rospy.Time.now()
         scan.header.frame_id = "laser_frame"
-        scan.angle_min = 0
-        scan.angle_max = 6.28
-        scan.angle_increment = 6.28 / (num_readings * 2)
-        scan.time_increment = 0.01
+        scan.angle_min = -1.57
+        scan.angle_max = 1.57
+        scan.angle_increment = 3.14 / num_readings
+        # scan.time_increment = 0.01
         scan.range_min = 0.1
         scan.range_max = 12.0
 
-        for i in range(num_readings):
-	    if rospy.is_shutdown():
-		break
-            lid.write(bytearray([90, 4, 4, 98]))
-            # Store read data in list format to have easer acces to separate bytes
-            serial_data = list(lid.read(9))
-            if len(serial_data) == 9:
-                # Check frame start
-                if serial_data[0] == 'Y' and serial_data[1] == 'Y':
-                    # Decode the data frame and put it at the end of LaserScan list
-                    scan.ranges.append( (ord(serial_data[2]) + (ord(serial_data[3]) << 8))/100.0 )
-                    scan.intensities.append(ord(serial_data[4]) + (ord(serial_data[5]) << 8))
+        if clockwise == False:
+            wiringpi.pwmWrite(horizontalServo, 108)
+            wiringpi.pwmWrite(verticalServo, 470)
+            for i in range(num_readings):
+            	if rospy.is_shutdown():
+	            break
+                lid.write(bytearray([90, 4, 4, 98]))
+                # Store read data in list format to have easer acces to separate bytes
+                serial_data = list(lid.read(9))
+                if len(serial_data) == 9:
+                    # Check frame start
+                    if serial_data[0] == 'Y' and serial_data[1] == 'Y':
+                        # Decode the data frame and put it at the end of LaserScan list
+                        scan.ranges.append( (ord(serial_data[2]) + (ord(serial_data[3]) << 8))/100.0 )
+                        scan.intensities.append(ord(serial_data[4]) + (ord(serial_data[5]) << 8))
+                    else:
+                        # If the frame start was incorrect, expect that the whole data frame is incorrect and put the data outside the range limit of laser at the end of the list
+                        scan.ranges.append(20)
+                        scan.intensities.append(0)
                 else:
-                    # If the frame start was incorrect, expect that the whole data frame is incorrect and put the data outside the range limit of laser at the end of the list
+                    # If the lenght of the data read was incorrect, expect that the whole frame is incorrect and put the data outside the range limit of laser at the end of the list
                     scan.ranges.append(20)
                     scan.intensities.append(0)
-            else:
-                # If the lenght of the data read was incorrect, expect that the whole frame is incorrect and put the data outside the range limit of laser at the end of the list
-                scan.ranges.append(20)
-                scan.intensities.append(0)
-            # Move to the servo to the next point
-            wiringpi.pwmWrite(horizontalServo, 108+(i*186/180))
+                # Move to the servo to the next point
+                wiringpi.pwmWrite(horizontalServo, 108+(i*186/180))
+            clockwise = True
 
-        wiringpi.pwmWrite(horizontalServo, 108) # 0 for horizontal servo
-        wiringpi.pwmWrite(verticalServo, 470) # 180 for vertical servo
-        rospy.sleep(0.3)
-
-        for i in range(num_readings):
-	    if rospy.is_shutdown():
-		break
-            lid.write(bytearray([90, 4, 4, 98]))
-            # Store read data in list format to have easer acces to separate bytes
-            serial_data = list(lid.read(9))
-            if len(serial_data) == 9:
-                # Check frame start
-                if serial_data[0] == 'Y' and serial_data[1] == 'Y':
-                    # Decode the data frame and put it at the end of LaserScan list
-                    scan.ranges.append( (ord(serial_data[2]) + (ord(serial_data[3]) << 8))/100.0 )
-                    scan.intensities.append(ord(serial_data[4]) + (ord(serial_data[5]) << 8))
+        else:
+            wiringpi.pwmWrite(horizontalServo, 480)
+            wiringpi.pwmWrite(verticalServo, 470)
+            for i in range(num_readings, -1, -1):
+                if rospy.is_shutdown():
+	            break
+                lid.write(bytearray([90, 4, 4, 98]))
+                # Store read data in list format to have easer acces to separate bytes
+                serial_data = list(lid.read(9))
+                if len(serial_data) == 9:
+                    # Check frame start
+                    if serial_data[0] == 'Y' and serial_data[1] == 'Y':
+                        # Decode the data frame and put it at the end of LaserScan list
+                        scan.ranges.insert(0, ( (ord(serial_data[2]) + (ord(serial_data[3]) << 8))/100.0 ))
+                        scan.intensities.insert(0, (ord(serial_data[4]) + (ord(serial_data[5]) << 8)))
+                    else:
+                        # If the frame start was incorrect, expect that the whole data frame is incorrect and put the data outside the range limit of laser at the end of the list
+                        scan.ranges.insert(0, 20)
+                        scan.intensities.insert(0, 0)
                 else:
-                    # If the frame start was incorrect, expect that the whole data frame is incorrect and put the data outside the range limit of laser at the end of the list
-                    scan.ranges.append(20)
-                    scan.intensities.append(0)
-            else:
-                # If the lenght of the data read was incorrect, expect that the whole frame is incorrect and put the data outside the range limit of laser at the end of the list
-                scan.ranges.append(20)
-                scan.intensities.append(0)
-            # Move to the servo to the next point
-            wiringpi.pwmWrite(horizontalServo, 108+(i*186/180))
+                    # If the lenght of the data read was incorrect, expect that the whole frame is incorrect and put the data outside the range limit of laser at the end of the list
+                    scan.ranges.insert(0, 20)
+                    scan.intensities.insert(0, 0)
+                # Move to the servo to the next point
+                wiringpi.pwmWrite(horizontalServo, 108+(i*186/180))
+            clockwise = False
 
 
+	    scan.time_increment = (rospy.Time.now().to_sec() - scan.header.stamp.to_sec())/(2*num_readings)
         # Publish created LaserRead scan
-        scan_pub.publish(scan)
+	if isMoving == False:
+	    scan_pub.publish(scan)
 
+	isMoving = False
         rate.sleep()
 

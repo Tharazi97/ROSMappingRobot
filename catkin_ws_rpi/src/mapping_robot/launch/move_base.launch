@@ -42,6 +42,9 @@
     <rosparam file="$(find mapping_robot)/params/local_costmap_params.yaml" command="load" />
     <rosparam file="$(find mapping_robot)/params/global_costmap_params.yaml" command="load" /> 
     <rosparam file="$(find mapping_robot)/params/base_local_planner_params.yaml" command="load" />
+    <param name="controller_frequency" value="2.0"/>
+    <!-- <param name="planner_patience" value="20.0"/> -->
+    <!-- <param name="recovery_behavior_enabled" value="false"/> -->
  </node>
 
 </launch> 

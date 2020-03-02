@@ -1,5 +1,6 @@
 #include "ros/ros.h"
 #include "std_msgs/UInt8.h"
+#include "std_msgs/Bool.h"
 #include "geometry_msgs/Twist.h"
 #include "mapping_robot/Speeds.h"
 #include "mapping_robot/ChangeDir.h"
@@ -12,8 +13,8 @@
 class SubPub {
 	public:	
 	void callbackWanted(const geometry_msgs::Twist msg) {
-        wantedDFiL = (msg.linear.x / wheelR) + ((shaft * msg.angular.z) / (2 * wheelR));
-        wantedDFiR = (msg.linear.x / wheelR) - ((shaft * msg.angular.z) / (2 * wheelR));
+        wantedDFiL = (msg.linear.x / wheelR) - ((shaft * msg.angular.z) / (2 * wheelR));
+        wantedDFiR = (msg.linear.x / wheelR) + ((shaft * msg.angular.z) / (2 * wheelR));
 	}
 
     void callbackSpeeds(const mapping_robot::Speeds speeds) {
@@ -23,18 +24,21 @@ class SubPub {
 	
 	ros::NodeHandle n;
 	ros::Publisher pub;
+	ros::Publisher pubMove;
 	ros::Subscriber subWanted;
     ros::Subscriber subSpeeds;
     ros::ServiceClient clientLeft;
     ros::ServiceClient clientRight;
 
-    double wantedDFiL = 0, wantedDFiR = 0;
+    double wantedDFiL = 0;
+    double wantedDFiR = 0;
     double currentDFiL = 0, currentDFiR = 0;
-    double wheelR = 0.065;
+    double wheelR = 0.0325;
     double shaft = 0.202;
 	
 	SubPub() {
 		pub = n.advertise<mapping_robot::MotorPowers>("motor_powers", 10);
+		pubMove = n.advertise<std_msgs::Bool>("is_moving", 1);
 
 		subWanted = n.subscribe("cmd_vel", 10, &SubPub::callbackWanted, this);
         subSpeeds = n.subscribe("speeds", 10, &SubPub::callbackSpeeds, this);
@@ -97,9 +101,9 @@ int main(int argc, char **argv)
 	SubPub subPub;
 
     PIDWheel leftWheel(2, 10, 0.001); //need to be calibrated
-    PIDWheel rightWheel(2, 10, 0.001);
+    PIDWheel rightWheel(4, 20, 0.001);
 
-    uint8_t lastLeftOut = 0, lastRightOut = 0;
+    int16_t lastLeftOut = 0, lastRightOut = 0;
 
     ros::Rate r(100.0);
     while(subPub.n.ok()) {
@@ -143,6 +147,12 @@ int main(int argc, char **argv)
             }
         }
         
+	if ((leftOut != 0) || (rightOut != 0)) {
+	    std_msgs::Bool msg;
+	    msg.data = true;
+	    subPub.pubMove.publish(msg);
+	}
+
         lastLeftOut = leftOut;
         lastRightOut = rightOut;
         r.sleep();
