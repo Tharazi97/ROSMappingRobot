@@ -34,6 +34,9 @@
       <param name="recovery_alpha_slow" value="0.0"/>
       <param name="recovery_alpha_fast" value="0.0"/>
       <param name="use_map_topic" value="true"/>
+      <param name="initial_cov_xx" value="0"/>
+      <param name="initial_cov_yy" value="0"/>
+      <param name="initial_cov_aa" value="0"/>
     </node>
 
    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
@@ -42,9 +45,9 @@
     <rosparam file="$(find mapping_robot)/params/local_costmap_params.yaml" command="load" />
     <rosparam file="$(find mapping_robot)/params/global_costmap_params.yaml" command="load" /> 
     <rosparam file="$(find mapping_robot)/params/base_local_planner_params.yaml" command="load" />
-    <param name="controller_frequency" value="2.0"/>
-    <!-- <param name="planner_patience" value="20.0"/> -->
-    <!-- <param name="recovery_behavior_enabled" value="false"/> -->
+    <param name="controller_frequency" value="10.0"/>
+    <param name="planner_patience" value="20.0"/>
+    <param name="recovery_behavior_enabled" value="false"/>
  </node>
 
 </launch> 

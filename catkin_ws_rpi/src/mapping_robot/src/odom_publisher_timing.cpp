@@ -29,8 +29,8 @@ int main(int argc, char** argv){
 
   double vp = 0.0;
 
-  double wheelR = 0.0325;
-  double shaft = 0.202;
+  double wheelR = 0.0345;
+  double shaft = 0.173;
  // uint8_t counter = 9;
 
   ros::Time current_time, last_time;
@@ -52,7 +52,7 @@ int main(int argc, char** argv){
           if (srvLeft.response.data.delta != 0) {
             dFiL = (3.14/20)/srvLeft.response.data.delta;
           }
-        } else if (difference <= 2*dt) {
+        }/* else if (difference <= 2*dt) {
           if (dFiL > 0) {
             dFiL = (3.14/20)/dt;
           } else {
@@ -64,7 +64,7 @@ int main(int argc, char** argv){
           } else {
             dFiL = (-3.14/20)/(2*dt);
           }
-        } else {
+        }*/ else {
           dFiL = 0;
         }
       } else {
@@ -79,7 +79,7 @@ int main(int argc, char** argv){
           if (srvRight.response.data.delta != 0) {
             dFiR = (3.14/20)/srvRight.response.data.delta;
           }
-        } else if (difference <= 2*dt) {
+        }/* else if (difference <= 2*dt) {
           if (dFiR > 0) {
             dFiR = (3.14/20)/dt;
           } else {
@@ -91,7 +91,7 @@ int main(int argc, char** argv){
           } else {
             dFiR = (-3.14/20)/(2*dt);
           }
-        } else {
+        }*/ else {
           dFiR = 0;
         }
       } else {

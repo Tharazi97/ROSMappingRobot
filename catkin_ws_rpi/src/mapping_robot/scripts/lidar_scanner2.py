@@ -46,6 +46,7 @@ if __name__ == '__main__':
     # Way the lidar is spinning
     clockwise = False
 
+    lid.write(bytearray([90, 5, 5, 1, 101]))
     lid.write(bytearray([90, 6, 3, 250, 0, 93]))
 
     while not rospy.is_shutdown():

@@ -33,8 +33,8 @@ class SubPub {
     double wantedDFiL = 0;
     double wantedDFiR = 0;
     double currentDFiL = 0, currentDFiR = 0;
-    double wheelR = 0.0325;
-    double shaft = 0.202;
+    double wheelR = 0.0345;
+    double shaft = 0.173;
 	
 	SubPub() {
 		pub = n.advertise<mapping_robot::MotorPowers>("motor_powers", 10);
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 	SubPub subPub;
 
     PIDWheel leftWheel(2, 10, 0.001); //need to be calibrated
-    PIDWheel rightWheel(4, 20, 0.001);
+    PIDWheel rightWheel(2, 10, 0.001);
 
     int16_t lastLeftOut = 0, lastRightOut = 0;
 
