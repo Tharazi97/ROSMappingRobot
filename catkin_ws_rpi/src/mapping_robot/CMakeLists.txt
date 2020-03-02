@@ -62,8 +62,6 @@ add_message_files(
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
-  GetTicksL.srv
-  GetTicksR.srv
   ChangeDir.srv
   GetEncoder.srv
 )
