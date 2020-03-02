@@ -11,8 +11,8 @@ TrajectoryPlannerROS:
 
   holonomic_robot: false
 
-  yaw_goal_tolerance: 0.5
-  xy_goal_tolerance: 0.2
+  yaw_goal_tolerance: 6.28
+  xy_goal_tolerance: 0.1
   latch_xy_goal_tolerance: false
   
   #meter_scoring: true
@@ -23,3 +23,5 @@ TrajectoryPlannerROS:
   vx_samples: 15
   #vtheta_samples: 20
   controller_frequency: 10.0
+
+  occdist_scale: 0.03
