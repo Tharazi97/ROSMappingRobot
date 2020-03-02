@@ -1,9 +1,9 @@
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <nav_msgs/Odometry.h>
-#include "mapping_robot/GetTicksL.h"
-#include "mapping_robot/GetTicksR.h"
+#include "mapping_robot/GetEncoder.h"
 #include "mapping_robot/Speeds.h"
+#include "mapping_robot/Encoder.h"
 
 int main(int argc, char** argv){
   ros::init(argc, argv, "odometry_publisher");
@@ -13,8 +13,8 @@ int main(int argc, char** argv){
   ros::Publisher speed_pub = n.advertise<mapping_robot::Speeds>("speeds", 10);
   tf::TransformBroadcaster odom_broadcaster;
 
-  ros::ServiceClient clientLeft = n.serviceClient<mapping_robot::GetTicksL>("GetTicksL");
-  ros::ServiceClient clientRight = n.serviceClient<mapping_robot::GetTicksR>("GetTicksR");
+  ros::ServiceClient clientLeft = n.serviceClient<mapping_robot::GetEncoder>("GetEncoderL");
+  ros::ServiceClient clientRight = n.serviceClient<mapping_robot::GetEncoder>("GetEncoderR");
 
   double xP = 0.0;
   double yP = 0.0;
@@ -32,71 +32,70 @@ int main(int argc, char** argv){
   double wheelR = 0.065;
   double shaft = 0.202;
 
-  int currTicksL = 0, lastTicksL = 0;
-  int currTicksR = 0, lastTicksR = 0;
-
-  int deltaTicksL = 0, deltaTicksR = 0;
-
   ros::Time current_time, last_time;
   current_time = ros::Time::now();
   last_time = ros::Time::now();
 
-  ros::Rate r(2.0);
-  while(n.ok()){
+  ros::Rate r(10.0);
+  while(n.ok()) {
 
     ros::spinOnce();               // check for incoming messages
     current_time = ros::Time::now();
     double dt = (current_time - last_time).toSec();
 
-    mapping_robot::GetTicksL srvLeft;
-    if (clientLeft.call(srvLeft))
-    {
-      currTicksL = srvLeft.response.data;
-    }
-    else
-    {
+    mapping_robot::GetEncoder srvLeft;
+    if (clientLeft.call(srvLeft)) {
+      double difference = current_time.toSec() - srvLeft.response.data.timeStamp;
+      if (difference <= dt) {
+        if (srvLeft.response.data.delta != 0) {
+          dFiL = (3.14/20)/srvLeft.response.data.delta;
+        }
+      } else if (difference <= 2*dt) {
+        if (dFiL > 0) {
+          dFiL = (3.14/20)/dt;
+        } else {
+          dFiL = (-3.14/20)/dt;
+        }
+      } else if (difference <= 3*dt) {
+        if (dFiL > 0) {
+          dFiL = (3.14/20)/(2*dt);
+        } else {
+          dFiL = (-3.14/20)/(2*dt);
+        }
+      } else {
+        dFiL = 0;
+      }
+    } else {
       ROS_INFO("fail");
+      dFiL = 0;
     }
 
-    if (lastTicksL > 32700 && currTicksL < -32700)
-    {
-      deltaTicksL = 65536 + currTicksL - lastTicksL;
-    }
-    else if (currTicksL > 32700 && lastTicksL < -32700)
-    {
-      deltaTicksL = currTicksL - lastTicksL - 65536;
-    }
-    else
-    {
-      deltaTicksL = currTicksL - lastTicksL;
-    }
-
-    dFiL = deltaTicksL * 0.157/dt;
-
-    mapping_robot::GetTicksR srvRight;
-    if (clientRight.call(srvRight))
-    {
-      currTicksR = srvRight.response.data;
-    }
-    else
-    {
+    mapping_robot::GetEncoder srvRight;
+    if (clientRight.call(srvRight)) {
+      double difference = current_time.toSec() - srvRight.response.data.timeStamp;
+      if (difference <= dt) {
+        if (srvLeft.response.data.delta != 0) {
+          dFiR = (3.14/20)/srvRight.response.data.delta;
+        }
+      } else if (difference <= 2*dt) {
+        if (dFiR > 0) {
+          dFiR = (3.14/20)/dt;
+        } else {
+          dFiR = (-3.14/20)/dt;
+        }
+      } else if (difference <= 3*dt) {
+        if (dFiR > 0) {
+          dFiR = (3.14/20)/(2*dt);
+        } else {
+          dFiR = (-3.14/20)/(2*dt);
+        }
+      } else {
+        dFiR = 0;
+      }
+    } else {
       ROS_INFO("fail");
+      dFiR = 0;
     }
-
-    if (lastTicksL > 32700 && currTicksL < -32700)
-    {
-      deltaTicksL = 65536 + currTicksL - lastTicksL;
-    }
-    else if (currTicksL > 32700 && lastTicksL < -32700)
-    {
-      deltaTicksL = currTicksL - lastTicksL - 65536;
-    }
-    else
-    {
-      deltaTicksL = currTicksL - lastTicksL;
-    }
-
-    dFiR = deltaTicksR * 0.157/dt;
     
     mapping_robot::Speeds speeds;
     speeds.left = dFiL;
@@ -157,8 +156,6 @@ int main(int argc, char** argv){
     odom_pub.publish(odom);
 
     last_time = current_time;
-    lastTicksL = currTicksL;
-    lastTicksR = currTicksR;
     r.sleep();
   }
 }
