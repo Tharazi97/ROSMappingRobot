@@ -1,4 +1,6 @@
 <launch>    
+    <node name="RPM" pkg="mapping_robot" type="delta.py" />
+
     <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
         <param name="map_update_interval" value="30.0"/>
         <param name="maxUrange" value="10.0"/>
