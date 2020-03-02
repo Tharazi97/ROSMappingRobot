@@ -53,12 +53,12 @@ def callback(data):
         ## set pin 1 high, 2 low
         GPIO.output(rightMotorIn1, GPIO.HIGH)
         GPIO.output(rightMotorIn2, GPIO.LOW)
-        rPWM.ChangeDutyCycle(data.left*(-1))
+        rPWM.ChangeDutyCycle(data.right*(-1))
     elif data.right > 0:
         ## set pin 1 low, 2 high
         GPIO.output(rightMotorIn1, GPIO.LOW)
         GPIO.output(rightMotorIn2, GPIO.HIGH)
-        rPWM.ChangeDutyCycle(data.left)
+        rPWM.ChangeDutyCycle(data.right)
     else:
         ## set both high to brake?
         GPIO.output(rightMotorIn1, GPIO.HIGH)

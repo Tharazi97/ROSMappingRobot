@@ -54,7 +54,6 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  Point.msg
   Speeds.msg
   MotorPowers.msg
   Encoder.msg
@@ -63,8 +62,6 @@ add_message_files(
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
-  GetTicksL.srv
-  GetTicksR.srv
   ChangeDir.srv
   GetEncoder.srv
 )
@@ -227,13 +224,10 @@ target_link_libraries(odom_publisher ${catkin_LIBRARIES})
 add_dependencies(odom_publisher mapping_robot_gencpp)
 add_dependencies(odom_publisher mapping_robot_generate_messages_cpp)
 
-add_executable(odom_publisher_timing src/odom_publisher_timing.cpp)
-target_link_libraries(odom_publisher_timing ${catkin_LIBRARIES})
-add_dependencies(odom_publisher_timing mapping_robot_gencpp)
-add_dependencies(odom_publisher_timing mapping_robot_generate_messages_cpp)
-
 add_executable(PID_drive src/PID_drive.cpp)
 target_link_libraries(PID_drive ${catkin_LIBRARIES})
 add_dependencies(PID_drive mapping_robot_gencpp)
 add_dependencies(PID_drive mapping_robot_generate_messages_cpp)
 
+add_executable(point_cloud_converter_node src/map3D_listener.cpp)
+target_link_libraries(point_cloud_converter_node ${catkin_LIBRARIES})

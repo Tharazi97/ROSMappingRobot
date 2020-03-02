@@ -1,4 +1,7 @@
 devel
 build
+openslam_gmapping
+slam_gmapping
 .vscode
 *.log
+*.pcd
