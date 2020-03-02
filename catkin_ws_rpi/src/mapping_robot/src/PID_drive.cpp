@@ -151,6 +151,10 @@ int main(int argc, char **argv)
 	    std_msgs::Bool msg;
 	    msg.data = true;
 	    subPub.pubMove.publish(msg);
+	} else {
+	    std_msgs::Bool msg;
+            msg.data = false;
+            subPub.pubMove.publish(msg);
 	}
 
         lastLeftOut = leftOut;
